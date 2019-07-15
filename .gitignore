@@ -1,0 +1,5 @@
+.project
+.pydevproject
+encryKeyfile.xlsx
+encryKeyOtherDatafile.xlsx
+__pycache__/main.cpython-37.pyc
