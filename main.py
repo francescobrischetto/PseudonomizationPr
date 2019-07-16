@@ -1,29 +1,23 @@
 import PySimpleGUI as sg
 import pandas as pd
 import sys
+import os
 from pandas.core.frame import DataFrame
 from cryptography.fernet import Fernet
 
 #Global variables
-global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, dataCurrentPath, dataSavedPath
+global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
 
 #Functions for Pseudonimize
 #
 #
 #
 #Encrypt with secret key function
-def EncryKey(myvalues):
-    Lista = {}
-    #filtro i valori in myvalues separando riga da modalita'
-    for (key, value) in myvalues.items():
-        if "id" in str(key) and value is True:
-            k1= dataColumnsName[int(key[0])]
-            k2= key[1:]
-            Lista[k1] = k2
-    keys = list(map(lambda x: str(x), Lista.keys()))
-    auxiliarData = mainData[keys]
-    #applico il metodo di Encryption
-    for(key,value) in Lista.items():
+def EncryKey():
+    global mainData, auxiliarData
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Encryption
+    for(key,value) in refinedDict.items():
         for n in range(dataRowsFound):
             if value=="id":
                 message = mainData.loc[n,key].encode()
@@ -32,9 +26,7 @@ def EncryKey(myvalues):
                 encrypted = f.encrypt(message)
                 mainData.at[n,key] = encrypted.decode()
                 auxiliarData.at[n,key] = k
-    mainData.to_excel(myvalues['dirButton']+"\encryKeyfile.xlsx")
-    auxiliarData.to_excel(myvalues['dirButton']+"\encryKeyOtherDatafile.xlsx")
-    sg.Popup('File created correctly!') 
+    SaveData()
     return
 
 #Hash function           
@@ -56,7 +48,29 @@ def DetermEncry():
 #Tokenization
 def Token():
     print('Token')
+
+#Function to refine arguments passed
+def RefineValues(notRefinedValues):
+    global refinedDict 
+    refinedDict = {}
+    for (key, value) in notRefinedValues.items():
+        if "id" in str(key) and value is True:
+            newIndex = dataColumnsName[int(key[0])]
+            newValue = key[1:]
+            refinedDict[newIndex] = newValue
+    global refinedList 
+    refinedList = list(map(lambda x: str(x), refinedDict.keys()))
     
+#Function to save the data 
+def SaveData():
+    global mainData,auxiliarData,dataSavedPath,dataCurrentPath
+    if ( dataSavedPath and dataSavedPath.strip()) :
+        mainData.to_excel(dataSavedPath+"\encryKeyfile.xlsx")
+        auxiliarData.to_excel(dataSavedPath+"\encryKeyOtherDatafile.xlsx")
+    else :       
+        mainData.to_excel(dataCurrentPath+"\encryKeyfile.xlsx")
+        auxiliarData.to_excel(dataCurrentPath+"\encryKeyOtherDatafile.xlsx")
+    sg.Popup('File created correctly!') 
 
 #Main Program
 #
@@ -117,6 +131,7 @@ while True:
             if buttonPseScreen is "OK_screen":
                 try:
                     mainData = pd.read_excel (valuesPseScreen['browseButton'])
+                    dataCurrentPath = os.path.dirname(valuesPseScreen['browseButton'])
                     dataRowsFound = mainData.shape[0]
                     dataColumnsFound = mainData.shape[1]
                     dataColumnsName = list( mainData.columns)
@@ -149,7 +164,9 @@ while True:
                             break
                         if buttonConfPseScreen is "Start_screen":
                             #Choose a function to call
-                            options[valConfPseScreen[0]](valConfPseScreen)    
+                            RefineValues(valConfPseScreen)
+                            dataSavedPath = valConfPseScreen['dirButton']
+                            options[valConfPseScreen[0]]()
                             windowMenuScreen.Close()     
                             windowConfigPseudoScreen.Close()
                             sys.exit(0)
