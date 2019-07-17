@@ -2,6 +2,11 @@ import PySimpleGUI as sg
 import pandas as pd
 import sys
 import os
+import hashlib
+from hashlib import blake2b
+import bcrypt
+import secrets
+import string
 from pandas.core.frame import DataFrame
 from cryptography.fernet import Fernet
 
@@ -31,15 +36,51 @@ def EncryKey():
 
 #Hash function           
 def Hashfun():
-    print('Hashfun')
+    global mainData, auxiliarData
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Hashing
+    for(key,value) in refinedDict.items():
+        for n in range(dataRowsFound):
+            if value=="id":
+                message = mainData.loc[n,key].encode()
+                hash_object = hashlib.sha256(message)
+                mainData.at[n,key] = hash_object.hexdigest()
+    SaveData()
+    return
 
 #Salted Hash function
 def SaltedHashfun():
-    print('SaltedHashfun')
+    global mainData, auxiliarData
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Hashing
+    for(key,value) in refinedDict.items():
+        for n in range(dataRowsFound):
+            if value=="id":
+                message = mainData.loc[n,key]
+                salt = bcrypt.gensalt().decode()
+                hash_object = hashlib.sha256(salt.encode() + message.encode())
+                mainData.at[n,key] = hash_object.hexdigest()
+                auxiliarData.at[n,key] = auxiliarData.loc[n,key] + ':' + salt
+    SaveData()
+    return
 
 #Keyed-hash function with stored key
 def KeyedHashfun():
-    print('KeyedHashfun')
+    global mainData, auxiliarData
+    alphabet = string.ascii_letters + string.digits
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Tokenization
+    for(key,value) in refinedDict.items():
+        for n in range(dataRowsFound):
+            if value=="id":
+                message = mainData.loc[n,key]
+                password = ''.join(secrets.choice(alphabet) for i in range(64))
+                h = blake2b(key=password.encode(), digest_size=64)
+                h.update(message.encode())
+                mainData.at[n,key] = h.hexdigest()
+                auxiliarData.at[n,key] = message + ':' + password
+    SaveData()
+    return
 
 #Deterministic Encryption
 def DetermEncry():
@@ -47,7 +88,17 @@ def DetermEncry():
 
 #Tokenization
 def Token():
-    print('Token')
+    global mainData, auxiliarData
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Tokenization
+    for(key,value) in refinedDict.items():
+        for n in range(dataRowsFound):
+            if value=="id":
+                message = mainData.loc[n,key]
+                mainData.at[n,key] = secrets.token_hex()
+                auxiliarData.at[n,key] = message
+    SaveData()
+    return
 
 #Function to refine arguments passed
 def RefineValues(notRefinedValues):
