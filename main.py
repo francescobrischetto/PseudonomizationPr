@@ -7,7 +7,7 @@ from hashlib import blake2b
 import bcrypt
 import secrets
 import string
-from pandas.core.frame import DataFrame
+from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
 
 #Global variables
@@ -29,7 +29,7 @@ def EncryKey():
                 k = Fernet.generate_key()
                 f = Fernet(k)
                 encrypted = f.encrypt(message)
-                mainData.at[n,key] = encrypted.decode()
+                mainData.at[n,key] = str(encrypted)
                 auxiliarData.at[n,key] = k
     SaveData()
     return
@@ -84,7 +84,27 @@ def KeyedHashfun():
 
 #Deterministic Encryption
 def DetermEncry():
-    print('DetermEncry')
+    global mainData, auxiliarData
+    alphabet = string.ascii_letters + string.digits
+    auxiliarData = mainData[refinedList]
+    #this is the main method of Tokenization
+    for(key,value) in refinedDict.items():
+        for n in range(dataRowsFound):
+            if value=="id":
+                blockSize = 16
+                message = mainData.loc[n,key]
+                alignedMessage = message
+                checkAligned = len(message) % blockSize
+                if(checkAligned != 0):
+                    for i in range (blockSize - checkAligned):
+                        alignedMessage+='0'
+                password = ''.join(secrets.choice(alphabet) for i in range(blockSize))
+                cipher = AES.new(password.encode(), AES.MODE_ECB)
+                cipherMessage = cipher.encrypt(alignedMessage.encode())
+                mainData.at[n,key] = str(cipherMessage)
+                auxiliarData.at[n,key] = message + ':' + password + ':' + str(blockSize)
+    SaveData()
+    return
 
 #Tokenization
 def Token():
