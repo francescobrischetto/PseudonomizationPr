@@ -11,7 +11,7 @@ from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
 
 #Global variables
-global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
+global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
 
 #Functions for Pseudonimize
 #
@@ -31,6 +31,10 @@ def EncryKey():
                 encrypted = f.encrypt(message)
                 mainData.at[n,key] = str(encrypted)
                 auxiliarData.at[n,key] = k
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "EncryKey"
     SaveData()
     return
 
@@ -45,6 +49,10 @@ def Hashfun():
                 message = mainData.loc[n,key].encode()
                 hash_object = hashlib.sha256(message)
                 mainData.at[n,key] = hash_object.hexdigest()
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "Hashfun"
     SaveData()
     return
 
@@ -61,6 +69,10 @@ def SaltedHashfun():
                 hash_object = hashlib.sha256(salt.encode() + message.encode())
                 mainData.at[n,key] = hash_object.hexdigest()
                 auxiliarData.at[n,key] = auxiliarData.loc[n,key] + ':' + salt
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "SaltedHashfun"
     SaveData()
     return
 
@@ -79,6 +91,10 @@ def KeyedHashfun():
                 h.update(message.encode())
                 mainData.at[n,key] = h.hexdigest()
                 auxiliarData.at[n,key] = message + ':' + password
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "KeyedHashfun"
     SaveData()
     return
 
@@ -103,6 +119,10 @@ def DetermEncry():
                 cipherMessage = cipher.encrypt(alignedMessage.encode())
                 mainData.at[n,key] = str(cipherMessage)
                 auxiliarData.at[n,key] = message + ':' + password + ':' + str(blockSize)
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "DetermEncry"
     SaveData()
     return
 
@@ -117,6 +137,10 @@ def Token():
                 message = mainData.loc[n,key]
                 mainData.at[n,key] = secrets.token_hex()
                 auxiliarData.at[n,key] = message
+    #Save the method used to pseudonimize at the end
+    pd.options.mode.chained_assignment = None
+    auxiliarDataColumnsName = list(refinedDict.keys())
+    auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "Token"
     SaveData()
     return
 
@@ -136,12 +160,43 @@ def RefineValues(notRefinedValues):
 def SaveData():
     global mainData,auxiliarData,dataSavedPath,dataCurrentPath
     if ( dataSavedPath and dataSavedPath.strip()) :
-        mainData.to_excel(dataSavedPath+"\encryKeyfile.xlsx")
-        auxiliarData.to_excel(dataSavedPath+"\encryKeyOtherDatafile.xlsx")
+        mainData.to_excel(dataSavedPath+"\pseudonimizedFile.xlsx")
+        auxiliarData.to_excel(dataSavedPath+"\pseudonimizedMetaData.xlsx")
     else :       
-        mainData.to_excel(dataCurrentPath+"\encryKeyfile.xlsx")
-        auxiliarData.to_excel(dataCurrentPath+"\encryKeyOtherDatafile.xlsx")
+        mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx")
+        auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx")
     sg.Popup('File created correctly!') 
+    
+
+#Functions for Reidentify
+#
+#
+#
+def Reidentify():
+    global auxiliarDataColumnsName,dataRowsFound
+    pseudoMethodUsed = auxiliarData.loc[dataRowsFound,auxiliarDataColumnsName[0]]
+    print(dataRowsFound)
+    print(auxiliarDataColumnsName[0])
+    print(pseudoMethodUsed)
+    optionsReid[pseudoMethodUsed]()
+    
+def EncryKeyReid():
+    print('encryreid')
+
+def HashfunReid():
+    print('reid')
+
+def SaltedHashfunReid():
+    print('reid')
+
+def KeyedHashfunReid():
+    print('reid')
+
+def DetermEncryReid():
+    print('reid')
+
+def TokenReid():
+    print('reid')
 
 #Main Program
 #
@@ -164,6 +219,14 @@ options = {"Encrypt with secret key"                : EncryKey,
            'Deterministic Encryption'               : DetermEncry,
            'Tokenization'                           : Token,
 }
+#Switch-case vocabulary for reidentification
+optionsReid = {"EncryKey"                           : EncryKeyReid,
+               'Hashfun'                            : HashfunReid,
+               'SaltedHashfun'                      : SaltedHashfunReid,
+               'KeyedHashfun'                       : KeyedHashfunReid,
+               'DetermEncry'                        : DetermEncryReid,
+               'TToken'                             : TokenReid,
+}
 
 #Event Cicle Menu Screen
 while True:
@@ -171,6 +234,52 @@ while True:
     if buttonMenuScreen is None or buttonMenuScreen is "Exit_screen":
         windowMenuScreen.Close()
         sys.exit(0)
+    if buttonMenuScreen is "Reid_screen":
+        #Hide/Disable/Disappear Menu Screen
+        windowMenuScreen.Disable()
+        windowMenuScreen.Disappear()
+        windowMenuScreen.Hide()
+        #Layout Reidentification Screen
+        layoutReidScreen = [
+            [sg.Text('Reidentification Screen:')],
+            [sg.Text('Upload Main Excel File', size=(50,1)) , sg.FileBrowse(key='mainData')],
+            [sg.Text('Upload MetaData Excel File', size=(50,1)) , sg.FileBrowse(key='auxiliarData')],
+            [sg.Button('Menu', key='Menu_screen'),sg.Button('OK', key='OK_screen'),sg.Button('Exit', key='Exit_screen')]
+            ]
+        
+        #Reidentification Screen
+        windowReidScreen = sg.Window('Reidentification Screen', default_element_size=(120, 30)).Layout(layoutReidScreen)
+        #Event Cicle Pseudo Screen
+        while True:
+            buttonReidScreen, valuesReidScreen = windowReidScreen.Read()
+            if buttonReidScreen is None or buttonReidScreen is "Exit_screen":
+                windowReidScreen.Close()
+                windowMenuScreen.Close()
+                sys.exit(0)
+            if buttonReidScreen is "Menu_screen":
+                #Enable/Reappear/UnHide Menu Screen (back to Menu)
+                windowReidScreen.Close()
+                windowMenuScreen.Enable()
+                windowMenuScreen.Reappear()
+                windowMenuScreen.UnHide()
+                break
+            if buttonReidScreen is "OK_screen":
+                try:
+                    mainData = pd.read_excel (valuesReidScreen['mainData'])
+                    auxiliarData = pd.read_excel(valuesReidScreen['auxiliarData'])
+                    dataCurrentPath = os.path.dirname(valuesReidScreen['mainData'])
+                    dataRowsFound = mainData.shape[0]
+                    dataColumnsFound = mainData.shape[1]
+                    dataColumnsName = list( mainData.columns)
+                    auxiliarDataColumnsName = list(auxiliarData.columns)
+                    print(auxiliarDataColumnsName)
+                    Reidentify()   
+                except SystemExit:
+                    sys.exit(0)
+                '''
+                except:
+                    sg.PopupError("Error! Please upload both correct Excel File!")     
+                    '''
     if buttonMenuScreen is "Pseudo_screen":
         #Hide/Disable/Disappear Menu Screen
         windowMenuScreen.Disable()
