@@ -9,6 +9,7 @@ import secrets
 import string
 from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
+from stat import S_IREAD, S_IRGRP, S_IROTH
 
 #Global variables
 global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
@@ -25,12 +26,12 @@ def EncryKey():
     for(key,value) in refinedDict.items():
         for n in range(dataRowsFound):
             if value=="id":
-                message = mainData.loc[n,key].encode()
+                message = mainData.loc[n,key]
                 k = Fernet.generate_key()
                 f = Fernet(k)
-                encrypted = f.encrypt(message)
-                mainData.at[n,key] = str(encrypted)
-                auxiliarData.at[n,key] = k
+                encrypted = f.encrypt(message.encode())
+                mainData.at[n,key] = encrypted.decode()
+                auxiliarData.at[n,key] = message + ':' + k.decode()
     #Save the method used to pseudonimize at the end
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
@@ -60,7 +61,7 @@ def Hashfun():
 def SaltedHashfun():
     global mainData, auxiliarData
     auxiliarData = mainData[refinedList]
-    #this is the main method of Hashing
+    #this is the main method of Salted Hashing
     for(key,value) in refinedDict.items():
         for n in range(dataRowsFound):
             if value=="id":
@@ -81,7 +82,7 @@ def KeyedHashfun():
     global mainData, auxiliarData
     alphabet = string.ascii_letters + string.digits
     auxiliarData = mainData[refinedList]
-    #this is the main method of Tokenization
+    #this is the main method of Keyed-hash function
     for(key,value) in refinedDict.items():
         for n in range(dataRowsFound):
             if value=="id":
@@ -103,7 +104,7 @@ def DetermEncry():
     global mainData, auxiliarData
     alphabet = string.ascii_letters + string.digits
     auxiliarData = mainData[refinedList]
-    #this is the main method of Tokenization
+    #this is the main method of Deterministic Encryption
     for(key,value) in refinedDict.items():
         for n in range(dataRowsFound):
             if value=="id":
@@ -165,6 +166,10 @@ def SaveData():
     else :       
         mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx",index=False)
         auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx",index=False)
+        '''ReadOnly mode, not sure if needed
+        os.chmod(dataCurrentPath+"\pseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+        os.chmod(dataCurrentPath+"\pseudonimizedMetaData.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+        '''
     sg.Popup('File created correctly!') 
     
 
@@ -179,10 +184,36 @@ def Reidentify():
     
 def EncryKeyReid():
     global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+            #Split key and metaData
+            metaData,k = auxiliarData.loc[n,elem].split(':')
+            #create Fernet Object
+            f = Fernet(k.encode())
+            #Decrypt original message
+            decrypted = f.decrypt(mainData.loc[n,elem].encode())
+            #check if it's the same as calculated when pseudonimize
+            if metaData == decrypted.decode():
+                mainData.at[n,elem]=metaData
+            else :
+                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
     return
 
 def HashfunReid():
-    print('reid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+            #Calculate hash object
+            message = auxiliarData.loc[n,elem].encode()
+            hash_object = hashlib.sha256(message)
+            #check if it's the same as calculated when pseudonimize
+            if mainData.at[n,elem] == hash_object.hexdigest():
+                mainData.at[n,elem]=auxiliarData.loc[n,elem]
+            else :
+                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
+    return
 
 def SaltedHashfunReid():
     global mainData, auxiliarData, auxiliarDataColumnsName
@@ -198,9 +229,24 @@ def SaltedHashfunReid():
                 else :
                     raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
     SaveNonPseudoData()
+    return
 
 def KeyedHashfunReid():
-    print('reid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+            #Split salt and metaData
+            metaData,password = auxiliarData.loc[n,elem].split(':')
+            #recalculate hash object
+            h = blake2b(key=password.encode(), digest_size=64)
+            h.update(metaData.encode())
+            #check if it's the same as calculated when pseudonimize
+            if h.hexdigest() == mainData.loc[n,elem]:
+                mainData.at[n,elem]=metaData
+            else :
+                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
+    return
 
 def DetermEncryReid():
     print('reid')
@@ -211,6 +257,9 @@ def TokenReid():
 def SaveNonPseudoData():
     global mainData,dataCurrentPath     
     mainData.to_excel(dataCurrentPath+"\dePseudonimizedFile.xlsx",index=False)
+    '''ReadOnly mode, not sure if needed
+    os.chmod(dataCurrentPath+"\dePseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+    '''
     sg.Popup('File de-pseudonimized correctly!') 
 
 #Main Program
@@ -240,7 +289,7 @@ optionsReid = {"EncryKey"                           : EncryKeyReid,
                'SaltedHashfun'                      : SaltedHashfunReid,
                'KeyedHashfun'                       : KeyedHashfunReid,
                'DetermEncry'                        : DetermEncryReid,
-               'TToken'                             : TokenReid,
+               'Token'                             : TokenReid,
 }
 
 #Event Cicle Menu Screen
@@ -292,7 +341,9 @@ while True:
                     windowMenuScreen.Enable()
                     windowMenuScreen.Reappear()
                     windowMenuScreen.UnHide()
-                    break   
+                    break
+                except ValueError:
+                    sg.PopupError("Error! one or both file are corrupted, calculation status failed!")  
                 except SystemExit:
                     sys.exit(0)
                 except:
