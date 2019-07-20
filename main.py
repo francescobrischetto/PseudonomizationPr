@@ -160,11 +160,11 @@ def RefineValues(notRefinedValues):
 def SaveData():
     global mainData,auxiliarData,dataSavedPath,dataCurrentPath
     if ( dataSavedPath and dataSavedPath.strip()) :
-        mainData.to_excel(dataSavedPath+"\pseudonimizedFile.xlsx")
-        auxiliarData.to_excel(dataSavedPath+"\pseudonimizedMetaData.xlsx")
+        mainData.to_excel(dataSavedPath+"\pseudonimizedFile.xlsx",index=False)
+        auxiliarData.to_excel(dataSavedPath+"\pseudonimizedMetaData.xlsx",index=False)
     else :       
-        mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx")
-        auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx")
+        mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx",index=False)
+        auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx",index=False)
     sg.Popup('File created correctly!') 
     
 
@@ -175,19 +175,29 @@ def SaveData():
 def Reidentify():
     global auxiliarDataColumnsName,dataRowsFound
     pseudoMethodUsed = auxiliarData.loc[dataRowsFound,auxiliarDataColumnsName[0]]
-    print(dataRowsFound)
-    print(auxiliarDataColumnsName[0])
-    print(pseudoMethodUsed)
     optionsReid[pseudoMethodUsed]()
     
 def EncryKeyReid():
-    print('encryreid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    return
 
 def HashfunReid():
     print('reid')
 
 def SaltedHashfunReid():
-    print('reid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+                #Split salt and metaData
+                metaData,salt = auxiliarData.loc[n,elem].split(':')
+                #recalculate hash_object
+                hash_object = hashlib.sha256(salt.encode() + metaData.encode())
+                #check if it's the same as calculated when pseudonimize
+                if hash_object.hexdigest() == mainData.loc[n,elem]:
+                    mainData.at[n,elem]=metaData
+                else :
+                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
 
 def KeyedHashfunReid():
     print('reid')
@@ -197,6 +207,11 @@ def DetermEncryReid():
 
 def TokenReid():
     print('reid')
+
+def SaveNonPseudoData():
+    global mainData,dataCurrentPath     
+    mainData.to_excel(dataCurrentPath+"\dePseudonimizedFile.xlsx",index=False)
+    sg.Popup('File de-pseudonimized correctly!') 
 
 #Main Program
 #
@@ -272,14 +287,16 @@ while True:
                     dataColumnsFound = mainData.shape[1]
                     dataColumnsName = list( mainData.columns)
                     auxiliarDataColumnsName = list(auxiliarData.columns)
-                    print(auxiliarDataColumnsName)
-                    Reidentify()   
+                    Reidentify()
+                    windowReidScreen.Close()
+                    windowMenuScreen.Enable()
+                    windowMenuScreen.Reappear()
+                    windowMenuScreen.UnHide()
+                    break   
                 except SystemExit:
                     sys.exit(0)
-                '''
                 except:
                     sg.PopupError("Error! Please upload both correct Excel File!")     
-                    '''
     if buttonMenuScreen is "Pseudo_screen":
         #Hide/Disable/Disappear Menu Screen
         windowMenuScreen.Disable()
@@ -347,9 +364,11 @@ while True:
                             RefineValues(valConfPseScreen)
                             dataSavedPath = valConfPseScreen['dirButton']
                             options[valConfPseScreen[0]]()
-                            windowMenuScreen.Close()     
                             windowConfigPseudoScreen.Close()
-                            sys.exit(0)
+                            windowMenuScreen.Enable()
+                            windowMenuScreen.Reappear()
+                            windowMenuScreen.UnHide()
+                            break
                     break
                 except SystemExit:
                     sys.exit(0)
