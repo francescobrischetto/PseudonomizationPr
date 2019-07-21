@@ -10,6 +10,7 @@ import string
 from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
 from stat import S_IREAD, S_IRGRP, S_IROTH
+from base64 import b64encode, b64decode
 
 #Global variables
 global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
@@ -118,7 +119,7 @@ def DetermEncry():
                 password = ''.join(secrets.choice(alphabet) for i in range(blockSize))
                 cipher = AES.new(password.encode(), AES.MODE_ECB)
                 cipherMessage = cipher.encrypt(alignedMessage.encode())
-                mainData.at[n,key] = str(cipherMessage)
+                mainData.at[n,key] = b64encode(cipherMessage).decode('utf-8')
                 auxiliarData.at[n,key] = message + ':' + password + ':' + str(blockSize)
     #Save the method used to pseudonimize at the end
     pd.options.mode.chained_assignment = None
@@ -137,7 +138,7 @@ def Token():
             if value=="id":
                 message = mainData.loc[n,key]
                 mainData.at[n,key] = secrets.token_hex()
-                auxiliarData.at[n,key] = message
+                auxiliarData.at[n,key] = message + ':' + mainData.loc[n,key]
     #Save the method used to pseudonimize at the end
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
@@ -249,10 +250,42 @@ def KeyedHashfunReid():
     return
 
 def DetermEncryReid():
-    print('reid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+            #Split metaData, password and BlockSize
+            metaData,password,blockSizeApp = auxiliarData.loc[n,elem].split(':')
+            blockSize = int(blockSizeApp)
+            #Align MetaData to blockSize
+            alignedMetaData = metaData
+            checkAligned = len(metaData) % blockSize
+            if(checkAligned != 0):
+                for i in range (blockSize - checkAligned):
+                    alignedMetaData+='0'
+            #Decrypt message
+            cipher = AES.new(password.encode(), AES.MODE_ECB)
+            decodedMessage = cipher.decrypt(b64decode(mainData.loc[n,elem])).decode()
+            #check if it's the same as calculated when pseudonimize
+            if decodedMessage ==  alignedMetaData:
+                 mainData.at[n,elem]=metaData
+            else :
+                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
+    return
 
 def TokenReid():
-    print('reid')
+    global mainData, auxiliarData, auxiliarDataColumnsName
+    for elem in auxiliarDataColumnsName:
+        for n in range(dataRowsFound):
+            #Split metaData and Token
+            metaData,token = auxiliarData.loc[n,elem].split(':')
+            #check if it's the same as calculated when pseudonimize
+            if token ==  mainData.loc[n,elem]:
+                mainData.at[n,elem]=metaData
+            else :
+                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+    SaveNonPseudoData()
+    return
 
 def SaveNonPseudoData():
     global mainData,dataCurrentPath     
@@ -343,7 +376,12 @@ while True:
                     windowMenuScreen.UnHide()
                     break
                 except ValueError:
-                    sg.PopupError("Error! one or both file are corrupted, calculation status failed!")  
+                    sg.PopupError("Error! one or both file are corrupted, calculation status failed!")
+                    windowReidScreen.Close()
+                    windowMenuScreen.Enable()
+                    windowMenuScreen.Reappear()
+                    windowMenuScreen.UnHide()
+                    break
                 except SystemExit:
                     sys.exit(0)
                 except:
