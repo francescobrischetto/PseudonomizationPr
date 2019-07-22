@@ -12,6 +12,9 @@ from cryptography.fernet import Fernet
 from stat import S_IREAD, S_IRGRP, S_IROTH
 from base64 import b64encode, b64decode
 
+image_home = './img/home.png'
+image_ok = './img/ok.png'
+image_exit = './img/exit.png'
 #Global variables
 global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
 
@@ -299,6 +302,8 @@ def SaveNonPseudoData():
 #
 #
 #
+#Change Textures
+sg.ChangeLookAndFeel('DarkAmber')
 #Layout Menu Screen
 layoutMenuScreen = [
     [sg.Text('Menu Screen:')],
@@ -393,13 +398,25 @@ while True:
         windowMenuScreen.Hide()
         #Layout Pseudo Screen
         layoutPseudoScreen = [
-            [sg.Text('Encrypt Screen:')],
-            [sg.Text('Upload Excel File', size=(50,1)) , sg.FileBrowse(key='browseButton')],
-            [sg.Button('Menu', key='Menu_screen'),sg.Button('OK', key='OK_screen'),sg.Button('Exit', key='Exit_screen')]
+            [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center')],
+            [sg.Text('_' * 65)],
+            [sg.Text(' ' * 65)],
+            [sg.Text('Choose a File', font=('Comic sans ms', 14), size=(35, 1))],
+            [sg.Text('Your File:', font=('Comic sans ms', 10)),
+            sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='browseButton')],
+            [sg.Text('_' * 65)],
+            [sg.Text(' ' * 65)],
+            [sg.Text(' ' * 5), 
+             sg.Button('',  image_filename=image_ok, key='OK_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
+             sg.Text(' ' * 60),
+             sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
+             sg.Text(' ' * 2),
+             sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
+             sg.Text(' ' * 2)]
             ]
         
         #Pseudo Screen
-        windowPseudoScreen = sg.Window('Pseudonomization Screen', default_element_size=(120, 30)).Layout(layoutPseudoScreen)
+        windowPseudoScreen = sg.Window('PseudonimizeMe! - Pseudonomization Screen', default_element_size=(120, 30),button_color=('black', '#fdcb52')).Layout(layoutPseudoScreen)
         #Event Cicle Pseudo Screen
         while True:
             buttonPseScreen, valuesPseScreen = windowPseudoScreen.Read()
