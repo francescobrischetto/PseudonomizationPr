@@ -169,8 +169,8 @@ def RefineValues(notRefinedValues):
 def SaveData():
     global mainData,auxiliarData,dataSavedPath,dataCurrentPath
     if ( dataSavedPath and dataSavedPath.strip()) :
-        mainData.to_excel(dataSavedPath+"\pseudonimizedFile.xlsx",index=False)
-        auxiliarData.to_excel(dataSavedPath+"\pseudonimizedMetaData.xlsx",index=False)
+        mainData.to_excel(dataSavedPath+".xlsx",index=False)
+        auxiliarData.to_excel(dataSavedPath+"MetaData.xlsx",index=False)
     else :       
         mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx",index=False)
         auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx",index=False)
@@ -178,7 +178,7 @@ def SaveData():
         os.chmod(dataCurrentPath+"\pseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
         os.chmod(dataCurrentPath+"\pseudonimizedMetaData.xlsx", S_IREAD|S_IRGRP|S_IROTH)
         '''
-    sg.Popup('File created correctly!') 
+    sg.Popup('File created correctly!',title='It works!') 
     
 
 #Functions for Reidentify
@@ -492,15 +492,40 @@ while True:
                     dataRowsFound = mainData.shape[0]
                     dataColumnsFound = mainData.shape[1]
                     dataColumnsName = list( mainData.columns)
+                    #Layout For input Configuration Frame
+                    frameLayout=[
+                        [sg.Text(' ' * 65)],
+                        [sg.Text('Select the method to use: ', font=('Comic sans ms', 11)),sg.Combo(('Encrypt with secret key', 'Hash function','Salted Hash Function','Keyed-hash function with stored key','Deterministic Encryption','Tokenization'), readonly=True , size=(28, 1))],
+                        [sg.Text('Columns Name   ',size=(15,1),font=('Comic sans ms', 11)),sg.Text('Status of the columns',size=(30,1),font=('Comic sans ms', 11))],
+                        [sg.Text(' ' * 65)]
+                        ]
                     #Layout Config Pseudo Screen
                     layoutConfigPseudoScreen = [
-                        [sg.Combo(('Encrypt with secret key', 'Hash function','Salted Hash Function','Keyed-hash function with stored key','Deterministic Encryption','Tokenization'), readonly=True , size=(60, 1))],
-                        [sg.Text('Select the Directory to store results', size=(80,1)) , sg.FolderBrowse(key='dirButton')],
-                        [sg.Button('Menu', key='Menu_screen'),sg.Button('Start',key='Start_screen'),sg.Button('Exit', key='Exit_screen')]
+                        [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center')],
+                        
+                        [sg.Frame('Output Configuration',[
+                            [sg.Text(' ' * 65)],
+                            [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red')],
+                            [sg.Text('Pseudonimized File Name', font=('Comic sans ms', 12), size=(35, 1))],
+                            [sg.Text('Your File:', font=('Comic sans ms', 10)),
+                             sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1)) , sg.FileSaveAs(key='dirButton',file_types=[("EXCEL Files","*.xlsx")])],
+                            [sg.Text(' ' * 65)]
+                        ])],
+                        [sg.Text(' ' * 65)],
+                        [sg.Text(' ' * 5), 
+                         sg.Button('',  image_filename=image_ok, key='Start_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
+                         sg.Text(' ' * 60),
+                         sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
+                         sg.Text(' ' * 2),
+                         sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
+                         sg.Text(' ' * 2)],
+                        [sg.Text(' ' * 65)]
                         ]
+                    
                     #Dynamic Layout for each column found
                     for i in range(dataColumnsFound):
-                        layoutConfigPseudoScreen.insert(1+i, [sg.Text(dataColumnsName[i],size=(30,1)),sg.Radio('Is Identifier', size=(12, 1), key=str(i)+'id',group_id=i), sg.Radio('Non Identifier', size=(12, 1), key=str(i)+'nd', group_id=i, default=True)])
+                        frameLayout.insert(3+i, [sg.Text(dataColumnsName[i],size=(15,1),font=('Comic sans ms', 10)),sg.Radio('Is Identifier', size=(12, 1), key=str(i)+'id',group_id=i), sg.Radio('Non Identifier', size=(12, 1), key=str(i)+'nd', group_id=i, default=True)])
+                    layoutConfigPseudoScreen.insert(1, [sg.Frame('Input Configuration',[[sg.Column(frameLayout)]])])
                     #Config Pseudo Screen 
                     windowConfigPseudoScreen = sg.Window('Pseudonomization',default_element_size=(120, 30)).Layout(layoutConfigPseudoScreen)
                     #Close Previous Screen
