@@ -15,6 +15,10 @@ from base64 import b64encode, b64decode
 image_home = './img/home.png'
 image_ok = './img/ok.png'
 image_exit = './img/exit.png'
+image_pseudo = './img/pseudo.png'
+image_depseudo = './img/depseudo.png'
+image_credits = './img/credits.png'
+
 #Global variables
 global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
 
@@ -291,8 +295,11 @@ def TokenReid():
     return
 
 def SaveNonPseudoData():
-    global mainData,dataCurrentPath     
-    mainData.to_excel(dataCurrentPath+"\dePseudonimizedFile.xlsx",index=False)
+    global mainData,dataCurrentPath, dataSavedPath
+    if ( dataSavedPath and dataSavedPath.strip()) :
+        mainData.to_excel(dataSavedPath+".xlsx",index=False)
+    else :       
+        mainData.to_excel(dataCurrentPath+"\dePseudonimizedFile.xlsx",index=False)
     '''ReadOnly mode, not sure if needed
     os.chmod(dataCurrentPath+"\dePseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
     '''
@@ -304,14 +311,30 @@ def SaveNonPseudoData():
 #
 #Change Textures
 sg.ChangeLookAndFeel('DarkAmber')
+
+#Columns of Menu Screen
+first_col = [[sg.Text('Pseudonimize', font=('Comic sans ms', 14), size=(17, 1), justification='center')],
+             [ sg.Text(' '*15) , sg.Button('',  image_filename=image_pseudo, tooltip='go to Pseudonimize Screen', image_size=(40,40), image_subsample=2, key='Pseudo_screen')]]
+second_col = [[sg.Text('Reidentify', font=('Comic sans ms', 14), size=(17, 1), justification='center')],
+              [ sg.Text(' '*15) , sg.Button('', image_filename=image_depseudo, tooltip='go to Reidentification Screen', image_size=(40,40), image_subsample=2, key='Reid_screen')]]
+
 #Layout Menu Screen
 layoutMenuScreen = [
-    [sg.Text('Menu Screen:')],
-    [sg.Button('Pseudonimize', key='Pseudo_screen'),sg.Button('Reidentify', key='Reid_screen'),sg.Button('Exit', key='Exit_screen')]
+    [sg.Text('Main Menu', size=(30,1), font=('Comic sans ms', 20), justification='center')],
+    [sg.Text('_' * 65)],
+    [sg.Text(' ' * 65)],
+    [sg.Column(first_col),sg.VerticalSeparator(),sg.Column(second_col)],
+    [sg.Text('_' * 65)],
+    [sg.Text(' ' * 65)],
+    [sg.Text(' ' * 5),
+     sg.Button('', image_filename=image_credits, tooltip='Credits', image_size=(40,40), image_subsample=2, key='Credits_screen'),
+     sg.Text(' ' * 75),
+     sg.Button('', image_filename=image_exit, tooltip='Exit Program', image_size=(40,40), image_subsample=2, key='Exit_screen')],
+    [sg.Text(' ' * 65)]
     ]
 
 #Menu Screen
-windowMenuScreen = sg.Window('Pseudonomization Screen', default_element_size=(120, 30)).Layout(layoutMenuScreen)
+windowMenuScreen = sg.Window('PseudonimizeMe! - Menu Screen', default_element_size=(120, 30),button_color=('black', '#fdcb52')).Layout(layoutMenuScreen)
 
 #Switch-case vocabulary
 options = {"Encrypt with secret key"                : EncryKey,
@@ -336,6 +359,9 @@ while True:
     if buttonMenuScreen is None or buttonMenuScreen is "Exit_screen":
         windowMenuScreen.Close()
         sys.exit(0)
+    if buttonMenuScreen is "Credits_screen":
+        sg.PopupOK('This program is created by Francesco Brischetto.\nCredits to Gregor Cresnar, Freepik, Eucalyp, Skyclick for free icons.', title='Credits')
+                    
     if buttonMenuScreen is "Reid_screen":
         #Hide/Disable/Disappear Menu Screen
         windowMenuScreen.Disable()
@@ -343,12 +369,38 @@ while True:
         windowMenuScreen.Hide()
         #Layout Reidentification Screen
         layoutReidScreen = [
-            [sg.Text('Reidentification Screen:')],
-            [sg.Text('Upload Main Excel File', size=(50,1)) , sg.FileBrowse(key='mainData')],
-            [sg.Text('Upload MetaData Excel File', size=(50,1)) , sg.FileBrowse(key='auxiliarData')],
-            [sg.Button('Menu', key='Menu_screen'),sg.Button('OK', key='OK_screen'),sg.Button('Exit', key='Exit_screen')]
+            [sg.Text('Reidentify', font=('Comic sans ms', 20), size=(30, 1), justification='center')],
+            [sg.Text(' ' * 65)],
+            [sg.Frame('Input Configuration',[
+                [sg.Text(' ' * 65)],
+                [sg.Text('Pseudonimized File', font=('Comic sans ms', 12), size=(35, 1))],
+                [sg.Text('Your File:', font=('Comic sans ms', 10)),
+                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='mainData',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65)],
+                [sg.Text('Meta Data File', font=('Comic sans ms', 12), size=(35, 1))],
+                [sg.Text('Your File:', font=('Comic sans ms', 10)),
+                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='auxiliarData',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65)]
+                ])],
+            [sg.Frame('Output Configuration',[
+                [sg.Text(' ' * 65)],
+                [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red')],
+                [sg.Text('Reidentified File', font=('Comic sans ms', 12), size=(35, 1))],
+                [sg.Text('Your File:', font=('Comic sans ms', 10)),
+                 sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1)) , sg.FileSaveAs(key='saveFile',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65)]
+            ])],
+            [sg.Text(' ' * 65)],
+            [sg.Text(' ' * 5), 
+             sg.Button('',  image_filename=image_ok, key='OK_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
+             sg.Text(' ' * 60),
+             sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
+             sg.Text(' ' * 2),
+             sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
+             sg.Text(' ' * 2)],
+            [sg.Text(' ' * 65)]
             ]
-        
+
         #Reidentification Screen
         windowReidScreen = sg.Window('Reidentification Screen', default_element_size=(120, 30)).Layout(layoutReidScreen)
         #Event Cicle Pseudo Screen
@@ -370,6 +422,7 @@ while True:
                     mainData = pd.read_excel (valuesReidScreen['mainData'])
                     auxiliarData = pd.read_excel(valuesReidScreen['auxiliarData'])
                     dataCurrentPath = os.path.dirname(valuesReidScreen['mainData'])
+                    dataSavedPath = valuesReidScreen['saveFile']
                     dataRowsFound = mainData.shape[0]
                     dataColumnsFound = mainData.shape[1]
                     dataColumnsName = list( mainData.columns)
@@ -403,7 +456,7 @@ while True:
             [sg.Text(' ' * 65)],
             [sg.Text('Choose a File', font=('Comic sans ms', 14), size=(35, 1))],
             [sg.Text('Your File:', font=('Comic sans ms', 10)),
-            sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='browseButton')],
+            sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='browseButton',file_types=[("EXCEL Files","*.xlsx")])],
             [sg.Text('_' * 65)],
             [sg.Text(' ' * 65)],
             [sg.Text(' ' * 5), 
@@ -412,7 +465,8 @@ while True:
              sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
              sg.Text(' ' * 2),
              sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
-             sg.Text(' ' * 2)]
+             sg.Text(' ' * 2)],
+            [sg.Text(' ' * 65)]
             ]
         
         #Pseudo Screen
