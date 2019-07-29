@@ -309,32 +309,34 @@ def SaveNonPseudoData():
 #
 #
 #
-#Change Textures
-sg.ChangeLookAndFeel('DarkAmber')
 
 #Columns of Menu Screen
-first_col = [[sg.Text('Pseudonimize', font=('Comic sans ms', 14), size=(17, 1), justification='center')],
-             [ sg.Text(' '*15) , sg.Button('',  image_filename=image_pseudo, tooltip='go to Pseudonimize Screen', image_size=(40,40), image_subsample=2, key='Pseudo_screen')]]
-second_col = [[sg.Text('Reidentify', font=('Comic sans ms', 14), size=(17, 1), justification='center')],
-              [ sg.Text(' '*15) , sg.Button('', image_filename=image_depseudo, tooltip='go to Reidentification Screen', image_size=(40,40), image_subsample=2, key='Reid_screen')]]
+first_col = [
+                [sg.Text('Pseudonimize', font=('Comic sans ms', 14), size=(17, 1), text_color='#fdcb52', justification='center', background_color='#2c2825')],
+                [sg.Text(' '*15, background_color='#2c2825') , sg.Button('',  image_filename=image_pseudo, tooltip='go to Pseudonimize Screen', image_size=(40,40), image_subsample=2, key='Pseudo_screen')]
+            ]
+second_col = [
+                [sg.Text('Reidentify', font=('Comic sans ms', 14), text_color='#fdcb52' ,background_color='#2c2825', size=(17, 1), justification='center')],
+                [sg.Text(' '*15, background_color='#2c2825') , sg.Button('', image_filename=image_depseudo, tooltip='go to Reidentification Screen', image_size=(40,40), image_subsample=2, key='Reid_screen')]
+            ]
 
 #Layout Menu Screen
 layoutMenuScreen = [
-    [sg.Text('Main Menu', size=(30,1), font=('Comic sans ms', 20), justification='center')],
-    [sg.Text('_' * 65)],
-    [sg.Text(' ' * 65)],
-    [sg.Column(first_col),sg.VerticalSeparator(),sg.Column(second_col)],
-    [sg.Text('_' * 65)],
-    [sg.Text(' ' * 65)],
-    [sg.Text(' ' * 5),
+    [sg.Text('Main Menu', size=(30,1), font=('Comic sans ms', 20), background_color='#2c2825', text_color='#fdcb52', justification='center')],
+    [sg.Text('_' * 65, background_color='#2c2825', text_color='#fdcb52')],
+    [sg.Text(' ' * 65, background_color='#2c2825')],
+    [sg.Column(first_col, background_color='#2c2825'),sg.VerticalSeparator(),sg.Column(second_col, background_color='#2c2825')],
+    [sg.Text('_' * 65, background_color='#2c2825', text_color='#fdcb52')],
+    [sg.Text(' ' * 65, background_color='#2c2825')],
+    [sg.Text(' ' * 5, background_color='#2c2825'),
      sg.Button('', image_filename=image_credits, tooltip='Credits', image_size=(40,40), image_subsample=2, key='Credits_screen'),
-     sg.Text(' ' * 75),
+     sg.Text(' ' * 75, background_color='#2c2825'),
      sg.Button('', image_filename=image_exit, tooltip='Exit Program', image_size=(40,40), image_subsample=2, key='Exit_screen')],
-    [sg.Text(' ' * 65)]
+    [sg.Text(' ' * 65, background_color='#2c2825')]
     ]
 
 #Menu Screen
-windowMenuScreen = sg.Window('PseudonimizeMe! - Menu Screen', default_element_size=(120, 30),button_color=('black', '#fdcb52')).Layout(layoutMenuScreen)
+windowMenuScreen = sg.Window('PseudonimizeMe! - Menu Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutMenuScreen)
 
 #Switch-case vocabulary
 options = {"Encrypt with secret key"                : EncryKey,
@@ -369,40 +371,40 @@ while True:
         windowMenuScreen.Hide()
         #Layout Reidentification Screen
         layoutReidScreen = [
-            [sg.Text('Reidentify', font=('Comic sans ms', 20), size=(30, 1), justification='center')],
-            [sg.Text(' ' * 65)],
+            [sg.Text('Reidentify', font=('Comic sans ms', 20), background_color='#2c2825', text_color='#fdcb52', size=(30, 1), justification='center')],
+            [sg.Text(' ' * 65, background_color='#2c2825')],
             [sg.Frame('Input Configuration',[
-                [sg.Text(' ' * 65)],
-                [sg.Text('Pseudonimized File', font=('Comic sans ms', 12), size=(35, 1))],
-                [sg.Text('Your File:', font=('Comic sans ms', 10)),
-                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='mainData',file_types=[("EXCEL Files","*.xlsx")])],
-                [sg.Text(' ' * 65)],
-                [sg.Text('Meta Data File', font=('Comic sans ms', 12), size=(35, 1))],
-                [sg.Text('Your File:', font=('Comic sans ms', 10)),
-                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='auxiliarData',file_types=[("EXCEL Files","*.xlsx")])],
-                [sg.Text(' ' * 65)]
-                ])],
+                [sg.Text(' ' * 65, background_color='#2c2825')],
+                [sg.Text('Pseudonimized File', font=('Comic sans ms', 12), background_color='#2c2825', text_color='#fdcb52', size=(35, 1))],
+                [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
+                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileBrowse(key='mainData',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65, background_color='#2c2825')],
+                [sg.Text('Meta Data File', font=('Comic sans ms', 12), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
+                [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
+                 sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileBrowse(key='auxiliarData',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65, background_color='#2c2825')]
+                ],background_color='#2c2825', title_color='#fdcb52')],
             [sg.Frame('Output Configuration',[
-                [sg.Text(' ' * 65)],
-                [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red')],
-                [sg.Text('Reidentified File', font=('Comic sans ms', 12), size=(35, 1))],
-                [sg.Text('Your File:', font=('Comic sans ms', 10)),
-                 sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1)) , sg.FileSaveAs(key='saveFile',file_types=[("EXCEL Files","*.xlsx")])],
-                [sg.Text(' ' * 65)]
-            ])],
-            [sg.Text(' ' * 65)],
-            [sg.Text(' ' * 5), 
+                [sg.Text(' ' * 65, background_color='#2c2825')],
+                [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red', background_color='#2c2825')],
+                [sg.Text('Reidentified File', font=('Comic sans ms', 12), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
+                [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
+                 sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileSaveAs(key='saveFile',file_types=[("EXCEL Files","*.xlsx")])],
+                [sg.Text(' ' * 65, background_color='#2c2825')]
+            ],background_color='#2c2825', title_color='#fdcb52')],
+            [sg.Text(' ' * 65,background_color='#2c2825')],
+            [sg.Text(' ' * 5,background_color='#2c2825'), 
              sg.Button('',  image_filename=image_ok, key='OK_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
-             sg.Text(' ' * 60),
+             sg.Text(' ' * 60,background_color='#2c2825'),
              sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
-             sg.Text(' ' * 2),
+             sg.Text(' ' * 2,background_color='#2c2825'),
              sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
-             sg.Text(' ' * 2)],
-            [sg.Text(' ' * 65)]
+             sg.Text(' ' * 2,background_color='#2c2825')],
+            [sg.Text(' ' * 65,background_color='#2c2825')]
             ]
 
         #Reidentification Screen
-        windowReidScreen = sg.Window('Reidentification Screen', default_element_size=(120, 30)).Layout(layoutReidScreen)
+        windowReidScreen = sg.Window('Reidentification Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutReidScreen)
         #Event Cicle Pseudo Screen
         while True:
             buttonReidScreen, valuesReidScreen = windowReidScreen.Read()
@@ -451,26 +453,26 @@ while True:
         windowMenuScreen.Hide()
         #Layout Pseudo Screen
         layoutPseudoScreen = [
-            [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center')],
-            [sg.Text('_' * 65)],
-            [sg.Text(' ' * 65)],
-            [sg.Text('Choose a File', font=('Comic sans ms', 14), size=(35, 1))],
-            [sg.Text('Your File:', font=('Comic sans ms', 10)),
-            sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1)) , sg.FileBrowse(key='browseButton',file_types=[("EXCEL Files","*.xlsx")])],
-            [sg.Text('_' * 65)],
-            [sg.Text(' ' * 65)],
-            [sg.Text(' ' * 5), 
+            [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
+            [sg.Text('_' * 65, background_color='#2c2825', text_color='#fdcb52')],
+            [sg.Text(' ' * 65,background_color='#2c2825')],
+            [sg.Text('Choose a File', font=('Comic sans ms', 14), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
+            [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
+            sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileBrowse(key='browseButton',file_types=[("EXCEL Files","*.xlsx")])],
+            [sg.Text('_' * 65, background_color='#2c2825', text_color='#fdcb52')],
+            [sg.Text(' ' * 65,background_color='#2c2825')],
+            [sg.Text(' ' * 5,background_color='#2c2825'), 
              sg.Button('',  image_filename=image_ok, key='OK_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
-             sg.Text(' ' * 60),
+             sg.Text(' ' * 60,background_color='#2c2825'),
              sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
-             sg.Text(' ' * 2),
+             sg.Text(' ' * 2,background_color='#2c2825'),
              sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
-             sg.Text(' ' * 2)],
-            [sg.Text(' ' * 65)]
+             sg.Text(' ' * 2,background_color='#2c2825')],
+            [sg.Text(' ' * 65,background_color='#2c2825')]
             ]
         
         #Pseudo Screen
-        windowPseudoScreen = sg.Window('PseudonimizeMe! - Pseudonomization Screen', default_element_size=(120, 30),button_color=('black', '#fdcb52')).Layout(layoutPseudoScreen)
+        windowPseudoScreen = sg.Window('PseudonimizeMe! - Pseudonomization Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutPseudoScreen)
         #Event Cicle Pseudo Screen
         while True:
             buttonPseScreen, valuesPseScreen = windowPseudoScreen.Read()
@@ -494,40 +496,40 @@ while True:
                     dataColumnsName = list( mainData.columns)
                     #Layout For input Configuration Frame
                     frameLayout=[
-                        [sg.Text(' ' * 65)],
-                        [sg.Text('Select the method to use: ', font=('Comic sans ms', 11)),sg.Combo(('Encrypt with secret key', 'Hash function','Salted Hash Function','Keyed-hash function with stored key','Deterministic Encryption','Tokenization'), readonly=True , size=(28, 1))],
-                        [sg.Text('Columns Name   ',size=(15,1),font=('Comic sans ms', 11)),sg.Text('Status of the columns',size=(30,1),font=('Comic sans ms', 11))],
-                        [sg.Text(' ' * 65)]
+                        [sg.Text(' ' * 65,background_color='#2c2825')],
+                        [sg.Text('Select the method to use: ', font=('Comic sans ms', 11), background_color='#2c2825', text_color='#fdcb52'),sg.Combo(('Encrypt with secret key', 'Hash function','Salted Hash Function','Keyed-hash function with stored key','Deterministic Encryption','Tokenization'), readonly=True , size=(28, 1))],
+                        [sg.Text('Columns Name   ',size=(15,1),font=('Comic sans ms', 11), background_color='#2c2825', text_color='#fdcb52'),sg.Text('Status of the columns',size=(30,1),font=('Comic sans ms', 11), background_color='#2c2825', text_color='#fdcb52')],
+                        [sg.Text(' ' * 65,background_color='#2c2825')]
                         ]
                     #Layout Config Pseudo Screen
                     layoutConfigPseudoScreen = [
-                        [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center')],
+                        [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
                         
                         [sg.Frame('Output Configuration',[
-                            [sg.Text(' ' * 65)],
-                            [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red')],
-                            [sg.Text('Pseudonimized File Name', font=('Comic sans ms', 12), size=(35, 1))],
-                            [sg.Text('Your File:', font=('Comic sans ms', 10)),
-                             sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1)) , sg.FileSaveAs(key='dirButton',file_types=[("EXCEL Files","*.xlsx")])],
-                            [sg.Text(' ' * 65)]
-                        ])],
-                        [sg.Text(' ' * 65)],
-                        [sg.Text(' ' * 5), 
+                            [sg.Text(' ' * 65,background_color='#2c2825')],
+                            [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red', background_color='#2c2825')],
+                            [sg.Text('Pseudonimized File Name', font=('Comic sans ms', 12), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
+                            [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
+                             sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileSaveAs(key='dirButton',file_types=[("EXCEL Files","*.xlsx")])],
+                            [sg.Text(' ' * 65,background_color='#2c2825')]
+                        ], background_color='#2c2825', title_color='#fdcb52')],
+                        [sg.Text(' ' * 65,background_color='#2c2825')],
+                        [sg.Text(' ' * 5,background_color='#2c2825'), 
                          sg.Button('',  image_filename=image_ok, key='Start_screen', image_size=(40,40), image_subsample=2, tooltip='Confirm Choise'), 
-                         sg.Text(' ' * 60),
+                         sg.Text(' ' * 60,background_color='#2c2825'),
                          sg.Button('',   image_filename=image_home, key='Menu_screen', image_size=(40,40), image_subsample=2, tooltip='Return to Menu'), 
-                         sg.Text(' ' * 2),
+                         sg.Text(' ' * 2,background_color='#2c2825'),
                          sg.Button('',  image_filename=image_exit, key='Exit_screen', image_size=(40,40), image_subsample=2, tooltip='Exit Program'), 
-                         sg.Text(' ' * 2)],
-                        [sg.Text(' ' * 65)]
+                         sg.Text(' ' * 2,background_color='#2c2825')],
+                        [sg.Text(' ' * 65,background_color='#2c2825')]
                         ]
                     
                     #Dynamic Layout for each column found
                     for i in range(dataColumnsFound):
-                        frameLayout.insert(3+i, [sg.Text(dataColumnsName[i],size=(15,1),font=('Comic sans ms', 10)),sg.Radio('Is Identifier', size=(12, 1), key=str(i)+'id',group_id=i), sg.Radio('Non Identifier', size=(12, 1), key=str(i)+'nd', group_id=i, default=True)])
-                    layoutConfigPseudoScreen.insert(1, [sg.Frame('Input Configuration',[[sg.Column(frameLayout)]])])
+                        frameLayout.insert(3+i, [sg.Text(dataColumnsName[i],size=(15,1),font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),sg.Radio('Is Identifier', size=(12, 1), key=str(i)+'id',group_id=i, background_color='#2c2825', text_color='#fdcb52'), sg.Radio('Non Identifier', size=(12, 1), key=str(i)+'nd', group_id=i, background_color='#2c2825', text_color='#fdcb52', default=True)])
+                    layoutConfigPseudoScreen.insert(1, [sg.Frame('Input Configuration',[[sg.Column(frameLayout, background_color='#2c2825')]], background_color='#2c2825', title_color='#fdcb52')])
                     #Config Pseudo Screen 
-                    windowConfigPseudoScreen = sg.Window('Pseudonomization',default_element_size=(120, 30)).Layout(layoutConfigPseudoScreen)
+                    windowConfigPseudoScreen = sg.Window('Pseudonomization',default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutConfigPseudoScreen)
                     #Close Previous Screen
                     windowPseudoScreen.Close()
                     #Event Cicle Config Pseudo Screen
@@ -540,6 +542,8 @@ while True:
                         if buttonConfPseScreen is "Menu_screen":
                             #Enable/Reappear/UnHide Menu Screen (back to Menu)
                             windowConfigPseudoScreen.Close()
+                            layoutConfigPseudoScreen.clear()
+                            frameLayout.clear()
                             windowMenuScreen.Enable()
                             windowMenuScreen.Reappear()
                             windowMenuScreen.UnHide()
@@ -549,6 +553,8 @@ while True:
                             RefineValues(valConfPseScreen)
                             dataSavedPath = valConfPseScreen['dirButton']
                             options[valConfPseScreen[0]]()
+                            layoutConfigPseudoScreen.clear()
+                            frameLayout.clear()
                             windowConfigPseudoScreen.Close()
                             windowMenuScreen.Enable()
                             windowMenuScreen.Reappear()
