@@ -20,7 +20,7 @@ image_depseudo = './img/depseudo.png'
 image_credits = './img/credits.png'
 
 #Global variables
-global mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList
+global options, mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataColumnsName, auxiliarDataColumnsName, dataCurrentPath, dataSavedPath, refinedDict, refinedList, methodUsed
 
 #Functions for Pseudonimize
 #
@@ -172,13 +172,15 @@ def SaveData():
         mainData.to_excel(dataSavedPath+".xlsx",index=False)
         auxiliarData.to_excel(dataSavedPath+"MetaData.xlsx",index=False)
     else :       
-        mainData.to_excel(dataCurrentPath+"\pseudonimizedFile.xlsx",index=False)
-        auxiliarData.to_excel(dataCurrentPath+"\pseudonimizedMetaData.xlsx",index=False)
+        mainData.to_excel(dataCurrentPath+"\pseudonymisedFile.xlsx",index=False)
+        auxiliarData.to_excel(dataCurrentPath+"\pseudonymisedMetaData.xlsx",index=False)
+        
         '''ReadOnly mode, not sure if needed
-        os.chmod(dataCurrentPath+"\pseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
-        os.chmod(dataCurrentPath+"\pseudonimizedMetaData.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+        os.chmod(dataCurrentPath+"\pseudonymisedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+        os.chmod(dataCurrentPath+"\pseudonymisedMetaData.xlsx", S_IREAD|S_IRGRP|S_IROTH)
         '''
-    sg.Popup('File created correctly!',title='It works!') 
+        
+    sg.Popup('Dataset pseudonymised correctly!',title='It works!') 
     
 
 #Functions for Reidentify
@@ -186,12 +188,15 @@ def SaveData():
 #
 #
 def Reidentify():
-    global auxiliarDataColumnsName,dataRowsFound
+    global options,methodUsed, auxiliarDataColumnsName,dataRowsFound
     pseudoMethodUsed = auxiliarData.loc[dataRowsFound,auxiliarDataColumnsName[0]]
+    for key,value in options.items():
+        if value.__name__ == pseudoMethodUsed:
+            methodUsed = key
     optionsReid[pseudoMethodUsed]()
     
 def EncryKeyReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Split key and metaData
@@ -204,12 +209,12 @@ def EncryKeyReid():
             if metaData == decrypted.decode():
                 mainData.at[n,elem]=metaData
             else :
-                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                raise ValueError('Cannot correctly re-identify the dataset, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def HashfunReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Calculate hash object
@@ -219,12 +224,12 @@ def HashfunReid():
             if mainData.at[n,elem] == hash_object.hexdigest():
                 mainData.at[n,elem]=auxiliarData.loc[n,elem]
             else :
-                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def SaltedHashfunReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
                 #Split salt and metaData
@@ -235,12 +240,12 @@ def SaltedHashfunReid():
                 if hash_object.hexdigest() == mainData.loc[n,elem]:
                     mainData.at[n,elem]=metaData
                 else :
-                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                    raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def KeyedHashfunReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Split salt and metaData
@@ -252,12 +257,12 @@ def KeyedHashfunReid():
             if h.hexdigest() == mainData.loc[n,elem]:
                 mainData.at[n,elem]=metaData
             else :
-                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                    raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def DetermEncryReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Split metaData, password and BlockSize
@@ -274,14 +279,14 @@ def DetermEncryReid():
             decodedMessage = cipher.decrypt(b64decode(mainData.loc[n,elem])).decode()
             #check if it's the same as calculated when pseudonimize
             if decodedMessage ==  alignedMetaData:
-                 mainData.at[n,elem]=metaData
+                mainData.at[n,elem]=metaData
             else :
-                    raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                    raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def TokenReid():
-    global mainData, auxiliarData, auxiliarDataColumnsName
+    global methodUsed, mainData, auxiliarData, auxiliarDataColumnsName
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Split metaData and Token
@@ -290,20 +295,22 @@ def TokenReid():
             if token ==  mainData.loc[n,elem]:
                 mainData.at[n,elem]=metaData
             else :
-                raise ValueError('Cannot correctly de-pseudonimize, make sure the files are correct!')
+                raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
     return
 
 def SaveNonPseudoData():
-    global mainData,dataCurrentPath, dataSavedPath
+    global methodUsed, mainData, dataCurrentPath, dataSavedPath
     if ( dataSavedPath and dataSavedPath.strip()) :
         mainData.to_excel(dataSavedPath+".xlsx",index=False)
     else :       
-        mainData.to_excel(dataCurrentPath+"\dePseudonimizedFile.xlsx",index=False)
-    '''ReadOnly mode, not sure if needed
-    os.chmod(dataCurrentPath+"\dePseudonimizedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
-    '''
-    sg.Popup('File de-pseudonimized correctly!') 
+        mainData.to_excel( dataCurrentPath+"/reIdentifiedFile.xlsx",index=False)
+        
+        '''ReadOnly mode, not sure if needed
+        os.chmod(dataCurrentPath+"\reIdentifiedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
+        '''
+        
+    sg.Popup('File re-identified correctly! The method used for re-identification was: ' + methodUsed,title='It works!') 
 
 #Main Program
 #
@@ -312,8 +319,8 @@ def SaveNonPseudoData():
 
 #Columns of Menu Screen
 first_col = [
-                [sg.Text('Pseudonimize', font=('Comic sans ms', 14), size=(17, 1), text_color='#fdcb52', justification='center', background_color='#2c2825')],
-                [sg.Text(' '*15, background_color='#2c2825') , sg.Button('',  image_filename=image_pseudo, tooltip='go to Pseudonimize Screen', image_size=(40,40), image_subsample=2, key='Pseudo_screen')]
+                [sg.Text('Pseudonymise', font=('Comic sans ms', 14), size=(17, 1), text_color='#fdcb52', justification='center', background_color='#2c2825')],
+                [sg.Text(' '*15, background_color='#2c2825') , sg.Button('',  image_filename=image_pseudo, tooltip='go to Pseudonymise Screen', image_size=(40,40), image_subsample=2, key='Pseudo_screen')]
             ]
 second_col = [
                 [sg.Text('Reidentify', font=('Comic sans ms', 14), text_color='#fdcb52' ,background_color='#2c2825', size=(17, 1), justification='center')],
@@ -336,7 +343,7 @@ layoutMenuScreen = [
     ]
 
 #Menu Screen
-windowMenuScreen = sg.Window('PseudonimizeMe! - Menu Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutMenuScreen)
+windowMenuScreen = sg.Window('PseuDiePy - Menu Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutMenuScreen)
 
 #Switch-case vocabulary
 options = {"Encrypt with secret key"                : EncryKey,
@@ -375,7 +382,7 @@ while True:
             [sg.Text(' ' * 65, background_color='#2c2825')],
             [sg.Frame('Input Configuration',[
                 [sg.Text(' ' * 65, background_color='#2c2825')],
-                [sg.Text('Pseudonimized File', font=('Comic sans ms', 12), background_color='#2c2825', text_color='#fdcb52', size=(35, 1))],
+                [sg.Text('Pseudonymised File', font=('Comic sans ms', 12), background_color='#2c2825', text_color='#fdcb52', size=(35, 1))],
                 [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
                  sg.Text('No Excel File Selected!', font=('Comic sans ms', 10), size=(40,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileBrowse(key='mainData',file_types=[("EXCEL Files","*.xlsx")])],
                 [sg.Text(' ' * 65, background_color='#2c2825')],
@@ -404,7 +411,7 @@ while True:
             ]
 
         #Reidentification Screen
-        windowReidScreen = sg.Window('Reidentification Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutReidScreen)
+        windowReidScreen = sg.Window('PseuDiePy - Reidentification Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutReidScreen)
         #Event Cicle Pseudo Screen
         while True:
             buttonReidScreen, valuesReidScreen = windowReidScreen.Read()
@@ -445,7 +452,7 @@ while True:
                 except SystemExit:
                     sys.exit(0)
                 except:
-                    sg.PopupError("Error! Please upload both correct Excel File!")     
+                    sg.PopupError("Error! Please upload both correct Excel File!")    
     if buttonMenuScreen is "Pseudo_screen":
         #Hide/Disable/Disappear Menu Screen
         windowMenuScreen.Disable()
@@ -453,7 +460,7 @@ while True:
         windowMenuScreen.Hide()
         #Layout Pseudo Screen
         layoutPseudoScreen = [
-            [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
+            [sg.Text('Pseudonymise', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
             [sg.Text('_' * 65, background_color='#2c2825', text_color='#fdcb52')],
             [sg.Text(' ' * 65,background_color='#2c2825')],
             [sg.Text('Choose a File', font=('Comic sans ms', 14), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
@@ -472,7 +479,7 @@ while True:
             ]
         
         #Pseudo Screen
-        windowPseudoScreen = sg.Window('PseudonimizeMe! - Pseudonomization Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutPseudoScreen)
+        windowPseudoScreen = sg.Window('PseuDiePy - Pseudonomization Screen', default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutPseudoScreen)
         #Event Cicle Pseudo Screen
         while True:
             buttonPseScreen, valuesPseScreen = windowPseudoScreen.Read()
@@ -503,12 +510,12 @@ while True:
                         ]
                     #Layout Config Pseudo Screen
                     layoutConfigPseudoScreen = [
-                        [sg.Text('Pseudonomize', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
+                        [sg.Text('Pseudonymise', size=(30,1), font=('Comic sans ms', 20), justification='center', background_color='#2c2825', text_color='#fdcb52')],
                         
                         [sg.Frame('Output Configuration',[
                             [sg.Text(' ' * 65,background_color='#2c2825')],
                             [sg.Text('*Optional! If not selected default path and name will be used', font=('Comic sans ms', 8),text_color='red', background_color='#2c2825')],
-                            [sg.Text('Pseudonimized File Name', font=('Comic sans ms', 12), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
+                            [sg.Text('Pseudonymised File Name', font=('Comic sans ms', 12), size=(35, 1), background_color='#2c2825', text_color='#fdcb52')],
                             [sg.Text('Your File:', font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),
                              sg.Text('No Filename Selected!', font=('Comic sans ms', 10), size=(38,1), background_color='#2c2825', text_color='#fdcb52') , sg.FileSaveAs(key='dirButton',file_types=[("EXCEL Files","*.xlsx")])],
                             [sg.Text(' ' * 65,background_color='#2c2825')]
@@ -529,7 +536,7 @@ while True:
                         frameLayout.insert(3+i, [sg.Text(dataColumnsName[i],size=(15,1),font=('Comic sans ms', 10), background_color='#2c2825', text_color='#fdcb52'),sg.Radio('Is Identifier', size=(12, 1), key=str(i)+'id',group_id=i, background_color='#2c2825', text_color='#fdcb52'), sg.Radio('Non Identifier', size=(12, 1), key=str(i)+'nd', group_id=i, background_color='#2c2825', text_color='#fdcb52', default=True)])
                     layoutConfigPseudoScreen.insert(1, [sg.Frame('Input Configuration',[[sg.Column(frameLayout, background_color='#2c2825')]], background_color='#2c2825', title_color='#fdcb52')])
                     #Config Pseudo Screen 
-                    windowConfigPseudoScreen = sg.Window('Pseudonomization',default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutConfigPseudoScreen)
+                    windowConfigPseudoScreen = sg.Window('PseuDiePy - Pseudonymisation Screen',default_element_size=(120, 30),background_color='#2c2825', button_color=('black', '#fdcb52')).Layout(layoutConfigPseudoScreen)
                     #Close Previous Screen
                     windowPseudoScreen.Close()
                     #Event Cicle Config Pseudo Screen
