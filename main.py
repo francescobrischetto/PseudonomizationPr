@@ -28,7 +28,7 @@ global options, mainData, auxiliarData, dataRowsFound, dataColumnsFound, dataCol
 #
 #Encrypt with secret key function
 def EncryKey():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     auxiliarData = mainData[refinedList]
     #this is the main method of Encryption
     for(key,value) in refinedDict.items():
@@ -44,12 +44,13 @@ def EncryKey():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "EncryKey"
+    pseudoMethodUsed = "EncryKey"
     SaveData()
     return
 
 #Hash function           
 def Hashfun():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     auxiliarData = mainData[refinedList]
     #this is the main method of Hashing
     for(key,value) in refinedDict.items():
@@ -62,12 +63,13 @@ def Hashfun():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "Hashfun"
+    pseudoMethodUsed = "Hashfun"
     SaveData()
     return
 
 #Salted Hash function
 def SaltedHashfun():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     auxiliarData = mainData[refinedList]
     #this is the main method of Salted Hashing
     for(key,value) in refinedDict.items():
@@ -82,12 +84,13 @@ def SaltedHashfun():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "SaltedHashfun"
+    pseudoMethodUsed = "SaltedHashfun"
     SaveData()
     return
 
 #Keyed-hash function with stored key
 def KeyedHashfun():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     alphabet = string.ascii_letters + string.digits
     auxiliarData = mainData[refinedList]
     #this is the main method of Keyed-hash function
@@ -104,12 +107,13 @@ def KeyedHashfun():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "KeyedHashfun"
+    pseudoMethodUsed = "KeyedHashfun"
     SaveData()
     return
 
 #Deterministic Encryption
 def DetermEncry():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     alphabet = string.ascii_letters + string.digits
     auxiliarData = mainData[refinedList]
     #this is the main method of Deterministic Encryption
@@ -132,12 +136,13 @@ def DetermEncry():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "DetermEncry"
+    pseudoMethodUsed = "DetermEncry"
     SaveData()
     return
 
 #Tokenization
 def Token():
-    global mainData, auxiliarData
+    global mainData, auxiliarData, pseudoMethodUsed
     auxiliarData = mainData[refinedList]
     #this is the main method of Tokenization
     for(key,value) in refinedDict.items():
@@ -150,6 +155,7 @@ def Token():
     pd.options.mode.chained_assignment = None
     auxiliarDataColumnsName = list(refinedDict.keys())
     auxiliarData.at[dataRowsFound,auxiliarDataColumnsName[0]] = "Token"
+    pseudoMethodUsed = "Token"
     SaveData()
     return
 
@@ -167,7 +173,7 @@ def RefineValues(notRefinedValues):
     
 #Function to save the data 
 def SaveData():
-    global mainData,auxiliarData,dataSavedPath,dataCurrentPath
+    global mainData,auxiliarData,dataSavedPath,dataCurrentPath,pseudoMethodUsed
     if ( dataSavedPath and dataSavedPath.strip()) :
         mainData.to_excel(dataSavedPath+".xlsx",index=False)
         auxiliarData.to_excel(dataSavedPath+"MetaData.xlsx",index=False)
@@ -175,12 +181,15 @@ def SaveData():
         mainData.to_excel(dataCurrentPath+"\pseudonymisedFile.xlsx",index=False)
         auxiliarData.to_excel(dataCurrentPath+"\pseudonymisedMetaData.xlsx",index=False)
         
+    for key,value in options.items():
+        if value.__name__ == pseudoMethodUsed:
+            methodUsed = key
         '''ReadOnly mode, not sure if needed
         os.chmod(dataCurrentPath+"\pseudonymisedFile.xlsx", S_IREAD|S_IRGRP|S_IROTH)
         os.chmod(dataCurrentPath+"\pseudonymisedMetaData.xlsx", S_IREAD|S_IRGRP|S_IROTH)
         '''
         
-    sg.Popup('Dataset pseudonymised correctly!',title='It works!') 
+    sg.Popup('Dataset pseudonymised correctly! The method used for pseudonymisation was: ' + methodUsed,title='It works!') 
     
 
 #Functions for Reidentify
@@ -188,7 +197,7 @@ def SaveData():
 #
 #
 def Reidentify():
-    global options,methodUsed, auxiliarDataColumnsName,dataRowsFound
+    global options,methodUsed, auxiliarDataColumnsName,dataRowsFound,auxiliarData,mainData
     pseudoMethodUsed = auxiliarData.loc[dataRowsFound,auxiliarDataColumnsName[0]]
     for key,value in options.items():
         if value.__name__ == pseudoMethodUsed:
@@ -218,11 +227,12 @@ def HashfunReid():
     for elem in auxiliarDataColumnsName:
         for n in range(dataRowsFound):
             #Calculate hash object
-            message = auxiliarData.loc[n,elem].encode()
-            hash_object = hashlib.sha256(message)
+            message = auxiliarData.loc[n,elem]
+            hash_object = hashlib.sha256(message.encode())
             #check if it's the same as calculated when pseudonimize
             if mainData.at[n,elem] == hash_object.hexdigest():
                 mainData.at[n,elem]=auxiliarData.loc[n,elem]
+                
             else :
                 raise ValueError('Cannot correctly re-identify, make sure the files are not corrupted!')
     SaveNonPseudoData()
@@ -428,8 +438,8 @@ while True:
                 break
             if buttonReidScreen is "OK_screen":
                 try:
-                    mainData = pd.read_excel (valuesReidScreen['mainData'])
-                    auxiliarData = pd.read_excel(valuesReidScreen['auxiliarData'])
+                    mainData = pd.read_excel (valuesReidScreen['mainData'],dtype=str)
+                    auxiliarData = pd.read_excel(valuesReidScreen['auxiliarData'],dtype=str)
                     dataCurrentPath = os.path.dirname(valuesReidScreen['mainData'])
                     dataSavedPath = valuesReidScreen['saveFile']
                     dataRowsFound = mainData.shape[0]
@@ -496,7 +506,7 @@ while True:
                 break
             if buttonPseScreen is "OK_screen":
                 try:
-                    mainData = pd.read_excel (valuesPseScreen['browseButton'])
+                    mainData = pd.read_excel (valuesPseScreen['browseButton'],dtype=str)
                     dataCurrentPath = os.path.dirname(valuesPseScreen['browseButton'])
                     dataRowsFound = mainData.shape[0]
                     dataColumnsFound = mainData.shape[1]
